@@ -9,3 +9,8 @@ Route::get('/user', function (Request $request) {
 
 
 Route::apiResource('categories', CategoryController::class);
+Route::post('/add-categories', [CategoryController::class, 'store']);
+Route::put('/update-categories/{id}', [CategoryController::class, 'update']);
+Route::delete('/delete-categories/{id}', [CategoryController::class, 'destroy']);
+Route::get('categories/search/{keyword}', [CategoryController::class, 'search']);
+

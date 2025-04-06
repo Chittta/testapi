@@ -12,7 +12,12 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return response()->json(Category::all(), 200);
+        $categories = Category::orderBy('CategoryID', 'desc')->get();
+        return response()->json([
+            'message'=> "Search Result",
+            'count' => count($categories),
+            'data' => $categories
+            ], 200);
     }
 
     /**
@@ -26,7 +31,10 @@ class CategoryController extends Controller
         ]);
 
         $category = Category::create($request->all());
-        return response()->json($category, 201);
+        return response()->json([
+            'message' => 'New Category Add Successfully',
+            'data' => $category
+        ], 201);
     }
 
     /**
@@ -57,7 +65,10 @@ class CategoryController extends Controller
         ]);
 
         $category->update($request->all());
-        return response()->json($category);
+        return response()->json([
+            'message' => 'Category Update Successfully',
+            'data' => $category
+        ], 201);
     }
 
     /**
@@ -73,4 +84,20 @@ class CategoryController extends Controller
         $category->delete();
         return response()->json(['message' => 'Category deleted']);
     }
+
+    public function search($keyword)
+    {
+        $categories = Category::where('CategoryName', 'LIKE', "%{$keyword}%")->get();
+
+        if ($categories->isEmpty()) {
+            return response()->json(['message' => 'No categories found.'], 404);
+        }
+
+        return response()->json([
+            'message' => 'Search results',
+            'count' => $categories->count(),
+            'data' => $categories
+        ], 200);
+    }
+
 }
