@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\SubcategoryController;
+use App\Http\Controllers\Api\SupplierController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -24,3 +25,5 @@ Route::delete('/delete-subcategories/{id}', [SubcategoryController::class, 'dest
 Route::get('subcategories/search/{keyword}', [SubcategoryController::class, 'search']);
 Route::patch('/subcategories/{id}', [SubcategoryController::class, 'updateonly']);
 
+Route::apiResource('supplier', SupplierController::class);
+Route::post('/add-supplier', [SupplierController::class, 'store']);
