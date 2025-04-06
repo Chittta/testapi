@@ -14,10 +14,10 @@ class CategoryController extends Controller
     {
         $categories = Category::orderBy('CategoryID', 'desc')->get();
         return response()->json([
-            'message'=> "Search Result",
+            'message' => "Search Result",
             'count' => count($categories),
             'data' => $categories
-            ], 200);
+        ], 200);
     }
 
     /**
@@ -101,22 +101,22 @@ class CategoryController extends Controller
     }
 
     public function updateonly(Request $request, $id)
-{
-    $category = Category::find($id);
+    {
+        $category = Category::find($id);
 
-    if (!$category) {
-        return response()->json(['message' => 'Category not found.'], 404);
+        if (!$category) {
+            return response()->json(['message' => 'Category not found.'], 404);
+        }
+
+        $category->update($request->only([
+            'CategoryName',
+            'CategoryDescription'
+        ]));
+
+        return response()->json([
+            'message' => 'Successfully Updated',
+            'data' => $category
+        ]);
     }
-
-    $category->update($request->only([
-        'CategoryName',
-        'CategoryDescription'
-    ]));
-
-    return response()->json([
-        'message' => 'Successfully Updated',
-        'data' => $category
-    ]);
-}
 
 }
