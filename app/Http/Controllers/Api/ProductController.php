@@ -72,6 +72,22 @@ class ProductController extends Controller
             'IsActive' => 'nullable|boolean',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
+        if ($request->CategoryID && !Category::find($request->CategoryID)) {
+            return response()->json([
+                'message' => 'Input category not found'
+            ], 422);
+        }
+        if ($request->SupplierID && !Category::find($request->SupplierID)) {
+            return response()->json([
+                'message' => 'Input Supplier not found'
+            ], 422);
+        }
+        if ($request->SubcategoryID && !Category::find($request->SubcategoryID)) {
+            return response()->json([
+                'message' => 'Input Subcategory not found'
+            ], 422);
+        }
+        
         DB::beginTransaction();
         try {
             $product = Product::create($request->only([
@@ -107,12 +123,7 @@ class ProductController extends Controller
                 'message' => 'Product created successfully with images',
                 'data' => $product->load('images')
             ], 201);
-            // return response()->json([
-            //     'message' => 'Product uploaded successfully',
-            //     'name' => $request->input('name'),
-            //     'description' => $request->input('description'),
-            //     'images' => $uploadedPaths,
-            // ]);
+            
         } catch (Exception $err) {
             DB::rollBack();
 
