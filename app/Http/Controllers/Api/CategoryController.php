@@ -100,4 +100,23 @@ class CategoryController extends Controller
         ], 200);
     }
 
+    public function updateonly(Request $request, $id)
+{
+    $category = Category::find($id);
+
+    if (!$category) {
+        return response()->json(['message' => 'Category not found.'], 404);
+    }
+
+    $category->update($request->only([
+        'CategoryName',
+        'CategoryDescription'
+    ]));
+
+    return response()->json([
+        'message' => 'Successfully Updated',
+        'data' => $category
+    ]);
+}
+
 }
