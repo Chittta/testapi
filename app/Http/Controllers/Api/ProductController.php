@@ -1,13 +1,18 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Supplier;
+use App\Models\ProductImage;
+
+
 class ProductController extends Controller
 {
 
@@ -55,39 +60,73 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ProductName' => 'required|string|max:45',
+            'ProductName' => 'required|string|max:255',
+            'ProductDescription' => 'nullable|string|max:255',
+            'CategoryID' => 'required|integer',
+            'SubcategoryID' => 'required|integer',
+            'Currency' => 'nullable|string|max:10',
             'UnitPrice' => 'nullable|numeric',
-            'SupplierID' => 'nullable|integer',
-            'CategoryID' => 'nullable|integer',
-            'SubcategoryID' => 'nullable|integer',
-            'Currency' => 'nullable|string|max:45',
+            'SupplierID' => 'required|integer',
             'QuntityOnStock' => 'nullable|integer',
             'QuntityOnOrcer' => 'nullable|integer',
             'IsActive' => 'nullable|boolean',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
+        DB::beginTransaction();
+        try {
+            $product = Product::create($request->only([
+                'ProductName',
+                'ProductDescription',
+                'CategoryID',
+                'SubcategoryID',
+                'Currency',
+                'UnitPrice',
+                'SupplierID',
+                'QuntityOnStock',
+                'QuntityOnOrcer',
+                'IsActive'
+            ]));
 
-        if ($request->CategoryID && !Category::find($request->CategoryID)) {
-            return response()->json([
-                'message' => 'Inputed category not found'
-            ], 422);
-        }
-        if ($request->SupplierID && !Category::find($request->SupplierID)) {
-            return response()->json([
-                'message' => 'Inputed Supplier not found'
-            ], 422);
-        }
-        if ($request->SubcategoryID && !Category::find($request->SubcategoryID)) {
-            return response()->json([
-                'message' => 'Inputed Subcategory not found'
-            ], 422);
-        }
+            $uploadedPaths = [];
 
-        $product = Product::create($request->all());
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('products', 'public');
+                $uploadedPaths[] = [
+                    'path' => $path,
+                    'url' => asset('storage/' . $path),
+                ];
 
-        return response()->json([
-            'message' => 'Product Successfully Stored',
-            'data' => $product
-        ], 201);
+                ProductImage::create([
+                    'ProductId' => $product->ProductId,
+                    'ImagePath' => $path
+                ]);
+            }
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Product created successfully with images',
+                'data' => $product->load('images')
+            ], 201);
+            // return response()->json([
+            //     'message' => 'Product uploaded successfully',
+            //     'name' => $request->input('name'),
+            //     'description' => $request->input('description'),
+            //     'images' => $uploadedPaths,
+            // ]);
+        } catch (Exception $err) {
+            DB::rollBack();
+
+            // Delete uploaded images (if any)
+            foreach ($imagePaths ?? [] as $path) {
+                Storage::disk('public')->delete($path);
+            }
+
+            return response()->json([
+                'message' => 'Product creation failed',
+                'error' => $err->getMessage()
+            ], 500);
+
+        }
     }
 
     /**

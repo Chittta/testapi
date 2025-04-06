@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('product_images', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('ProductId');
+            $table->string('ImagePath'); // store file path or URL
             $table->timestamps();
+    
+            // foreign key
+            $table->foreign('ProductId')
+                  ->references('ProductId')->on('products')
+                  ->onDelete('cascade');
         });
     }
 

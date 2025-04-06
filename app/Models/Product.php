@@ -34,6 +34,9 @@ class Product extends Model
     {
         return $this->belongsTo(Supplier::class, 'SupplierID', 'SupplierID');
     }
-
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class, 'ProductId', 'ProductId');
+    }
     
 }
