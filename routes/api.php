@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\SubcategoryController;
 use App\Http\Controllers\Api\SupplierController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\SearchController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -27,3 +29,15 @@ Route::patch('/subcategories/{id}', [SubcategoryController::class, 'updateonly']
 
 Route::apiResource('supplier', SupplierController::class);
 Route::post('/add-supplier', [SupplierController::class, 'store']);
+// Product Route
+Route::apiResource('product', ProductController::class);
+Route::post('/add-product', [ProductController::class, 'store']);
+Route::put('/update-product/{id}', [ProductController::class, 'update']);
+Route::delete('/delete-product/{id}', [ProductController::class, 'destroy']);
+Route::patch('/product/{id}', [ProductController::class, 'updateonly']);
+Route::get('/products/search/{keyword}', [ProductController::class, 'search']);
+
+
+//earch Routr
+Route::get('/search/category/{keyword}', [SearchController::class, 'searchByCategory']);
+Route::get('/search/subcategory/{keyword}', [SearchController::class, 'searchBySubcategory']);

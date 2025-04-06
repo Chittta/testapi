@@ -12,4 +12,14 @@ class Category extends Model
         'CategoryName',
         'CategoryDescription',
     ];
+
+    public function subcategories()
+    {
+        return $this->hasMany(Subcategory::class, 'CategoryID', 'CategoryID');
+    }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'CategoryID', 'CategoryID');
+    }
 }
