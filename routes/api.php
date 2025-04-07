@@ -2,16 +2,20 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\SubcategoryController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\AuthController;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+Route::post('/signup', [AuthController::class, 'signUp']);
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::apiResource('category', CategoryController::class);
 Route::post('/add-category', [CategoryController::class, 'store']);
