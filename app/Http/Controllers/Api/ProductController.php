@@ -11,7 +11,7 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Supplier;
 use App\Models\ProductImage;
-
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -21,8 +21,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        // return response()->json(Product::orderByDesc('ProductId')->get());
-        $products = Product::with(['category', 'subcategory', 'supplier'])
+        $products = Product::with(['category', 'subcategory', 'supplier', 'images'])
             ->orderByDesc('ProductId')
             ->get();
 
@@ -42,6 +41,12 @@ class ProductController extends Controller
                 'QuntityOnStock' => $product->QuntityOnStock,
                 'QuntityOnOrcer' => $product->QuntityOnOrcer,
                 'IsActive' => $product->IsActive,
+                'Images' => $product->images->map(function ($img) {
+                    return [
+                        'id' => $img->id,
+                        'ImagePath' => url('storage/' . $img->ImagePath),
+                    ];
+                }),
                 'created_at' => $product->created_at,
                 'updated_at' => $product->updated_at,
             ];
@@ -87,7 +92,7 @@ class ProductController extends Controller
                 'message' => 'Input Subcategory not found'
             ], 422);
         }
-        
+
         DB::beginTransaction();
         try {
             $product = Product::create($request->only([
@@ -123,7 +128,7 @@ class ProductController extends Controller
                 'message' => 'Product created successfully with images',
                 'data' => $product->load('images')
             ], 201);
-            
+
         } catch (Exception $err) {
             DB::rollBack();
 
@@ -145,33 +150,122 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        $product = Product::find($id);
+        $product = Product::with('images')->find($id);
 
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
-        return response()->json($product);
+        return response()->json([
+            'message' => 'Product retrieved successfully',
+            'data' => $product
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $product = Product::find($id);
+        // return $request->all();
+        $validator = Validator::make($request->all(), [
+            'ProductName' => 'required|string|max:255',
+            'ProductDescription' => 'nullable|string|max:255',
+            'CategoryID' => 'required|integer',
+            'SubcategoryID' => 'required|integer',
+            'Currency' => 'nullable|string|max:10',
+            'UnitPrice' => 'nullable|numeric',
+            'SupplierID' => 'required|integer',
+            'QuntityOnStock' => 'nullable|integer',
+            'QuntityOnOrcer' => 'nullable|integer',
+            'IsActive' => 'nullable|boolean',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        if (!Category::find($request->CategoryID)) {
+            return response()->json(['message' => 'Input category not found'], 422);
+        }
+        if (!Category::find($request->SubcategoryID)) {
+            return response()->json(['message' => 'Input subcategory not found'], 422);
+        }
+        if (!Category::find($request->SupplierID)) {
+            return response()->json(['message' => 'Input supplier not found'], 422);
+        }
+
+        $product = Product::find($id);
         if (!$product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
-        $product->update($request->all());
+        // return $product;
 
-        return response()->json([
-            'message' => 'Product Successfully Updated',
-            'data' => $product
-        ]);
+        DB::beginTransaction();
+        try {
+            // Update product fields
+            $product->update($request->only([
+                'ProductName',
+                'ProductDescription',
+                'CategoryID',
+                'SubcategoryID',
+                'Currency',
+                'UnitPrice',
+                'SupplierID',
+                'QuntityOnStock',
+                'QuntityOnOrcer',
+                'IsActive'
+            ]));
+
+            $uploadedPaths = [];
+
+            if ($request->hasFile('images')) {
+                // Delete old images from storage and DB
+                foreach ($product->images as $oldImage) {
+                    Storage::disk('public')->delete($oldImage->ImagePath);
+                    $oldImage->delete();
+                }
+
+                // Upload new images
+                foreach ($request->file('images') as $image) {
+                    $path = $image->store('products', 'public');
+                    $uploadedPaths[] = [
+                        'path' => $path,
+                        'url' => asset('storage/' . $path),
+                    ];
+
+                    ProductImage::create([
+                        'ProductId' => $product->ProductId,
+                        'ImagePath' => $path
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Product updated successfully',
+                'data' => $product->load('images')
+            ]);
+        } catch (Exception $err) {
+            DB::rollBack();
+
+            foreach ($uploadedPaths ?? [] as $img) {
+                Storage::disk('public')->delete($img['path']);
+            }
+
+            return response()->json([
+                'message' => 'Product update failed',
+                'error' => $err->getMessage()
+            ], 500);
+        }
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -226,4 +320,41 @@ class ProductController extends Controller
             'data' => $data
         ]);
     }
+
+    public function getProductsBySubcategory($subcategoryId)
+    {
+        $products = Product::with('images')
+            ->where('SubcategoryID', $subcategoryId)
+            ->get();
+
+        if ($products->isEmpty()) {
+            return response()->json([
+                'message' => 'No products found for this subcategory'
+            ], 404);
+        }
+
+        $formattedProducts = $products->map(function ($product) {
+            return [
+                'ProductId' => $product->ProductId,
+                'ProductName' => $product->ProductName,
+                'ProductDescription' => $product->ProductDescription,
+                'UnitPrice' => $product->UnitPrice,
+                'IsActive' => $product->IsActive,
+                'Images' => $product->images->map(function ($image) {
+                    return [
+                        'path' => $image->ImagePath,
+                        'url' => asset('storage/' . $image->ImagePath)
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json([
+            'message' => 'Products retrieved successfully',
+            'data' => $formattedProducts
+        ]);
+    }
+
+
+
 }

@@ -51,7 +51,7 @@ class SearchController extends Controller
             ->with([
                 'category',
                 'products' => function ($query) {
-                    $query->with('supplier');
+                    $query->with(['supplier', 'images']); // include images
                 }
             ])
             ->first();
@@ -71,10 +71,17 @@ class SearchController extends Controller
                         'ProductName' => $product->ProductName,
                         'SupplierName' => $product->supplier->SupplierName ?? null,
                         'UnitPrice' => $product->UnitPrice,
-                        'IsActive' => $product->IsActive
+                        'IsActive' => $product->IsActive,
+                        'Images' => $product->images->map(function ($image) {
+                            return [
+                                'path' => $image->ImagePath,
+                                'url' => asset('storage/' . $image->ImagePath)
+                            ];
+                        }),
                     ];
                 }),
             ]
         ]);
     }
+
 }

@@ -32,10 +32,12 @@ Route::post('/add-supplier', [SupplierController::class, 'store']);
 // Product Route
 Route::apiResource('product', ProductController::class);
 Route::post('/add-product', [ProductController::class, 'store']);
-Route::put('/update-product/{id}', [ProductController::class, 'update']);
+Route::post('/update-product/{id}', [ProductController::class, 'update']);
+Route::get('/get-product/{id}', [ProductController::class, 'show']);
 Route::delete('/delete-product/{id}', [ProductController::class, 'destroy']);
 Route::patch('/product/{id}', [ProductController::class, 'updateonly']);
 Route::get('/products/search/{keyword}', [ProductController::class, 'search']);
+Route::get('/products/subcategory/{subcategoryId}', [ProductController::class, 'getProductsBySubcategory']);
 
 
 //earch Routr
