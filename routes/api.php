@@ -9,15 +9,8 @@ use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\AuthController;
 
-
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
-
 Route::post('/signup', [AuthController::class, 'signUp']);
 Route::post('/login', [AuthController::class, 'loginUser']);
-// Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-
 
 Route::middleware('auth:sanctum')->group(function () {
     // category
@@ -25,25 +18,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/update-category/{id}', [CategoryController::class, 'update']);
     Route::delete('/delete-category/{id}', [CategoryController::class, 'destroy']);
     Route::patch('/updatecategory/{id}', [CategoryController::class, 'updateonly']);
-
     // subcategories
     Route::post('/add-subcategories', [SubcategoryController::class, 'store']);
     Route::put('/update-subcategories/{id}', [SubcategoryController::class, 'update']);
     Route::delete('/delete-subcategories/{id}', [SubcategoryController::class, 'destroy']);
     Route::patch('/subcategories/{id}', [SubcategoryController::class, 'updateonly']);
-
     // product
     Route::post('/add-product', [ProductController::class, 'store']);
     Route::post('/update-product/{id}', [ProductController::class, 'update']);
     Route::delete('/delete-product/{id}', [ProductController::class, 'destroy']);
     Route::patch('/product/{id}', [ProductController::class, 'updateonly']);
-    Route::apiResource('category', CategoryController::class);
     Route::post('/logout', [AuthController::class, 'logout']);
-
 });
+
 Route::get('/login', [AuthController::class, 'login'])->name('login');
 // category Search
-// Route::apiResource('category', CategoryController::class);
+Route::apiResource('category', CategoryController::class);
+Route::get('get-category/{id}', [CategoryController::class, 'show']);
 Route::get('category/search/{keyword}', [CategoryController::class, 'search']);
 // subcategories search
 Route::apiResource('subcategories', SubcategoryController::class);

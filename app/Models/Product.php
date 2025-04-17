@@ -15,6 +15,8 @@ class Product extends Model
         'SubcategoryID',
         'Currency',
         'UnitPrice',
+        'StrickPrice',
+        'PurchaseQuantity',
         'SupplierID',
         'QuntityOnStock',
         'QuntityOnOrcer',

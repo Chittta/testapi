@@ -38,6 +38,7 @@ class ProductController extends Controller
                 'SupplierName' => $product->supplier->SupplierName ?? null,
                 'Currency' => $product->Currency,
                 'UnitPrice' => $product->UnitPrice,
+                'StrickPrice' => $product->StrickPrice,
                 'QuntityOnStock' => $product->QuntityOnStock,
                 'QuntityOnOrcer' => $product->QuntityOnOrcer,
                 'IsActive' => $product->IsActive,
@@ -64,19 +65,39 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'ProductName' => 'required|string|max:255',
             'ProductDescription' => 'nullable|string|max:255',
             'CategoryID' => 'required|integer',
             'SubcategoryID' => 'required|integer',
             'Currency' => 'nullable|string|max:10',
             'UnitPrice' => 'nullable|numeric',
+            'StrickPrice' => 'nullable|numeric',
+            'PurchaseQuantity' => 'required|integer',
             'SupplierID' => 'required|integer',
             'QuntityOnStock' => 'nullable|integer',
             'QuntityOnOrcer' => 'nullable|integer',
             'IsActive' => 'nullable|boolean',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        if (
+            $request->filled('UnitPrice') &&
+            $request->filled('StrickPrice') &&
+            $request->StrickPrice <= $request->UnitPrice
+        ) {
+            return response()->json([
+                'message' => 'StrickPrice must be greater than UnitPrice.'
+            ], 422);
+        }
+        
         if ($request->CategoryID && !Category::find($request->CategoryID)) {
             return response()->json([
                 'message' => 'Input category not found'
@@ -95,6 +116,7 @@ class ProductController extends Controller
 
         DB::beginTransaction();
         try {
+            // return $request;
             $product = Product::create($request->only([
                 'ProductName',
                 'ProductDescription',
@@ -102,6 +124,8 @@ class ProductController extends Controller
                 'SubcategoryID',
                 'Currency',
                 'UnitPrice',
+                'StrickPrice',
+                'PurchaseQuantity',
                 'SupplierID',
                 'QuntityOnStock',
                 'QuntityOnOrcer',
@@ -175,6 +199,8 @@ class ProductController extends Controller
             'SubcategoryID' => 'required|integer',
             'Currency' => 'nullable|string|max:10',
             'UnitPrice' => 'nullable|numeric',
+            'StrickPrice' => 'nullable|numeric',
+            'PurchaseQuantity' => 'required|integer',
             'SupplierID' => 'required|integer',
             'QuntityOnStock' => 'nullable|integer',
             'QuntityOnOrcer' => 'nullable|integer',
@@ -216,6 +242,8 @@ class ProductController extends Controller
                 'SubcategoryID',
                 'Currency',
                 'UnitPrice',
+                'StrickPrice',
+                'PurchaseQuantity',
                 'SupplierID',
                 'QuntityOnStock',
                 'QuntityOnOrcer',
@@ -306,6 +334,8 @@ class ProductController extends Controller
                 'SupplierName' => $product->supplier->SupplierName ?? null,
                 'Currency' => $product->Currency,
                 'UnitPrice' => $product->UnitPrice,
+                'StrickPrice' => $product->StrickPrice,
+                'PurchaseQuantity' => $product->PurchaseQuantity,
                 'QuntityOnStock' => $product->QuntityOnStock,
                 'QuntityOnOrcer' => $product->QuntityOnOrcer,
                 'IsActive' => $product->IsActive,

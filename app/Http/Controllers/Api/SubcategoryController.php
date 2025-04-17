@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Subcategory;
 use App\Models\Category;
+use Illuminate\Support\Facades\Validator;
 class SubcategoryController extends Controller
 {
     /**
@@ -26,12 +27,19 @@ class SubcategoryController extends Controller
      */
     public function store(Request $request)
     {
-        
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'CategoryID' => 'nullable|integer',
-            'SubcategoryName' => 'required|string|max:45',
-            'SubcategoryDescription' => 'nullable|string|max:45',
+            'SubcategoryName' => 'required|string',
+            'SubcategoryDescription' => 'nullable|string',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation Error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
         if ($request->CategoryID && !Category::find($request->CategoryID)) {
             return response()->json([
                 'message' => 'Inputed category not found'
