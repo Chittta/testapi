@@ -43,6 +43,7 @@ Route::get('subcategories/search/{keyword}', [SubcategoryController::class, 'sea
 // supplier
 Route::apiResource('supplier', SupplierController::class);
 Route::post('/add-supplier', [SupplierController::class, 'store']);
+Route::put('/update-supplier/{id}', [SupplierController::class, 'update']);
 
 // Product Route
 Route::apiResource('product', ProductController::class);
@@ -53,3 +54,4 @@ Route::get('/products/subcategory/{subcategoryId}', [ProductController::class, '
 //search Routr
 Route::get('/search/category/{keyword}', [SearchController::class, 'searchByCategory']);
 Route::get('/search/subcategory/{keyword}', [SearchController::class, 'searchBySubcategory']);
+Route::get('/search/categorysub/{id}', [SearchController::class, 'searchByCategoryId']);

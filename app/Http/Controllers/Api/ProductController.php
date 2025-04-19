@@ -385,6 +385,31 @@ class ProductController extends Controller
         ]);
     }
 
+    public function updateonly(Request $request, $id)
+    {
+        $product = Product::find($id);
 
+        if (!$product) {
+            return response()->json(['message' => 'Category not found.'], 404);
+        }
 
+        $product->update($request->only([
+            'ProductName',
+            'ProductDescription',
+            'CategoryID',
+            'SubcategoryID',
+            'Currency',
+            'UnitPrice',
+            'StrickPrice',
+            'PurchaseQuantity',
+            'SupplierID',
+            'QuntityOnStock',
+            'QuntityOnOrcer'
+        ]));
+
+        return response()->json([
+            'message' => 'Product Successfully Updated',
+            'data' => $product
+        ]);
+    }
 }

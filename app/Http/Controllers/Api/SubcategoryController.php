@@ -71,24 +71,35 @@ class SubcategoryController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
-    {
-        $subcategory = Subcategory::find($id);
+{
+    $subcategory = Subcategory::find($id);
 
-        if (!$subcategory) {
-            return response()->json(['message' => 'Subcategory not found.'], 404);
-        }
-
-        $subcategory->update($request->only([
-            'CategoryID',
-            'SubcategoryName',
-            'SubcategoryDescription'
-        ]));
-
-        return response()->json([
-            'message' => 'Subcategory Successfully Updated',
-            'data' => $subcategory
-        ]);
+    if (!$subcategory) {
+        return response()->json(['message' => 'Subcategory not found.'], 404);
     }
+
+    // Check if CategoryID is provided and exists
+    if ($request->has('CategoryID')) {
+        $category = Category::where('CategoryID', $request->CategoryID)->first();
+
+        if (!$category) {
+            return response()->json(['message' => 'Category not found.'], 404);
+        }
+    }
+
+    // Proceed with update
+    $subcategory->update($request->only([
+        'CategoryID',
+        'SubcategoryName',
+        'SubcategoryDescription'
+    ]));
+
+    return response()->json([
+        'message' => 'Subcategory Successfully Updated',
+        'data' => $subcategory
+    ]);
+}
+
 
     /**
      * Remove the specified resource from storage.

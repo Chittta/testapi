@@ -84,4 +84,37 @@ class SearchController extends Controller
         ]);
     }
 
+    public function searchByCategoryId($categoryId)
+{
+    $category = Category::with('subcategories')
+        ->where('CategoryID', $categoryId)
+        ->first();
+
+    if (!$category) {
+        return response()->json([
+            'message' => 'Category not found.'
+        ], 404);
+    }
+
+    return response()->json([
+        'message' => 'Category search result',
+        'data' => [
+            'Category' => [
+                'CategoryID' => $category->CategoryID,
+                'CategoryName' => $category->CategoryName,
+                'CategoryDescription' => $category->CategoryDescription,
+            ],
+            'Subcategories' => $category->subcategories->map(function ($subcategory) {
+                return [
+                    'SubcategoryID' => $subcategory->SubcategoryID,
+                    'SubcategoryName' => $subcategory->SubcategoryName,
+                    'SubcategoryDescription' => $subcategory->SubcategoryDescription,
+                ];
+            })
+        ]
+    ]);
+}
+
+
+
 }

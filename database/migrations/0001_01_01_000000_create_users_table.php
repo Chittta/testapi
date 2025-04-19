@@ -12,15 +12,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
+            $table->id('UserId');
+            $table->string('Username')->nullable();
+            $table->string('Password')->nullable(); // Consider hashing passwords securely in controller/service
+            $table->string('EmailId')->nullable();
+            $table->string('Mobile', 10)->nullable();
+            $table->string('FirstName')->nullable();
+            $table->string('LastName')->nullable();
+            $table->string('Address')->nullable();
+            $table->string('Country')->nullable();
+            $table->string('State')->nullable();
+            $table->string('City')->nullable();
+            $table->string('PIN')->nullable();
             $table->timestamps();
-        });
 
+            $table->unique('UserId'); // Optional: primary key is already unique
+        });
+ 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
